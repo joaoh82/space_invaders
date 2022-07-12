@@ -95,5 +95,17 @@ fn movable_system(
         let translation = &mut transform.translation;
         translation.x += velocity.x * TIME_STEP * BASE_SPEED;
         translation.y += velocity.y * TIME_STEP * BASE_SPEED;
+
+        if movable.auto_despawn {
+            // despawn if offscreen
+            const MARGIN: f32 = 200.;
+            if translation.y > win_size.height / 2. + MARGIN 
+                || translation.y < -win_size.height / 2. - MARGIN 
+                || translation.x > win_size.width / 2. + MARGIN 
+                || translation.x < -win_size.width / 2. - MARGIN 
+            {
+                commands.entity(entity).despawn();
+            }
+        }
     }
 }
