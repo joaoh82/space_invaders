@@ -3,12 +3,15 @@ mod player;
 mod components;
 
 use bevy::prelude::*;
+use components::{Velocity, Player, Movable};
 use player::*;
 
 // region: --- Asset Constants
 
 const PLAYER_SPRITE: &str = "player_a_01.png";
 const PLAYER_SIZE: (f32, f32) = (144., 75.);
+const PLAYER_LASER_SPRITE: &str = "laser_a_01.png";
+const PLAYER_LASER_SIZE: (f32, f32) = (9., 54.);
 
 const SPRITE_SCALE: f32 = 0.5;
 
@@ -30,6 +33,7 @@ pub struct WinSize {
 
 struct GameTextures {
     player: Handle<Image>,
+    player_laser: Handle<Image>,
 }
 
 // endregion: --- Resources
@@ -46,6 +50,7 @@ fn main() {
         .add_plugins(DefaultPlugins)
         .add_plugin(PlayerPlugin)
         .add_startup_system(setup_system) // Called once at the beginning of the game
+        .add_system(movable_system)
         .run();
 }
 
@@ -75,7 +80,20 @@ fn setup_system(
     // add GameTextures resource
     let game_textures = GameTextures {
         player: asset_server.load(PLAYER_SPRITE),
+        player_laser: asset_server.load(PLAYER_LASER_SPRITE),
     };
     commands.insert_resource(game_textures);
 
+}
+
+fn movable_system(
+    mut commands: Commands,
+	win_size: Res<WinSize>,
+	mut query: Query<(Entity, &Velocity, &mut Transform, &Movable)>,
+) {
+    for (entity, velocity, mut transform, movable) in query.iter_mut() {
+        let translation = &mut transform.translation;
+        translation.x += velocity.x * TIME_STEP * BASE_SPEED;
+        translation.y += velocity.y * TIME_STEP * BASE_SPEED;
+    }
 }
