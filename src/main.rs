@@ -3,7 +3,7 @@ mod player;
 mod components;
 mod enemy;
 
-use bevy::{prelude::*, math::Vec3Swizzles, sprite::collide_aabb::collide, ecs::system::Insert};
+use bevy::{prelude::*, math::Vec3Swizzles, sprite::collide_aabb::collide, ecs::system::Insert, utils::HashSet};
 use components::{Velocity, Player, Movable, SpriteSize, Laser, FromPlayer, Enemy, ExplosionToSpawn, Explosion, ExplosionTimer};
 use enemy::EnemyPlugin;
 use player::*;
@@ -33,6 +33,8 @@ const EXPLOSION_LENGTH: usize = 16;
 const TIME_STEP: f32 = 1. / 60.;
 const BASE_SPEED: f32 = 500.;
 
+const MAX_ENEMY_COUNT: u32 = 10;
+
 // endregion: --- Game Contants
 
 // region: --- Resources
@@ -49,6 +51,8 @@ struct GameTextures {
     enemy_laser: Handle<Image>,
     explosion: Handle<TextureAtlas>,
 }
+
+struct EnemyCount(u32);
 
 // endregion: --- Resources
 
@@ -110,6 +114,7 @@ fn setup_system(
         explosion: explosion,
     };
     commands.insert_resource(game_textures);
+    commands.insert_resource(EnemyCount(0));
 
 }
 
@@ -139,15 +144,25 @@ fn movable_system(
 
 fn player_laser_hit_enemy_system(
     mut commands: Commands,
+    mut enemy_count: ResMut<EnemyCount>,
     laser_query: Query<(Entity, &Transform, &SpriteSize), (With<Laser>, With<FromPlayer>)>,
     enemy_query: Query<(Entity, &Transform, &SpriteSize), With<Enemy>>,
 ) {
+    let mut despawned_entities: HashSet<Entity> = HashSet::new();
+
     // iterate over lasers
     for (laser_entity, laser_tf, laser_size) in laser_query.iter() {
+        if despawned_entities.contains(&laser_entity) {
+            continue;
+        }
         let laser_scale = Vec2::from(laser_tf.scale.xy());
 
         // iterate over enemies
         for (enemy_entity, enemy_tf, enemy_size) in enemy_query.iter() {
+            if despawned_entities.contains(&enemy_entity) || despawned_entities.contains(&laser_entity) {
+                continue;
+            }
+
             let enemy_scale = Vec2::from(enemy_tf.scale.xy());
 
             // determine if collision
@@ -162,9 +177,12 @@ fn player_laser_hit_enemy_system(
             if let Some(collision) = collision {
                 // remove laser
                 commands.entity(laser_entity).despawn();
+                despawned_entities.insert(laser_entity);
 
                 // remove enemy
                 commands.entity(enemy_entity).despawn();
+                despawned_entities.insert(enemy_entity);
+                enemy_count.0 -= 1;
 
                 // spawn explosion
                 commands.spawn().insert(ExplosionToSpawn(enemy_tf.translation.clone()));
