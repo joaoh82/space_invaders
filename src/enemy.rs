@@ -2,7 +2,7 @@ use std::f32::consts::PI;
 
 use bevy::{prelude::*, core::FixedTimestep, ecs::schedule::ShouldRun};
 use rand::{Rng, thread_rng};
-use crate::{GameTextures, SPRITE_SCALE, WinSize, components::{Enemy, SpriteSize, Movable, FromEnemy, Laser, Velocity}, ENEMY_SIZE, EnemyCount, MAX_ENEMY_COUNT, ENEMY_LASER_SIZE};
+use crate::{GameTextures, SPRITE_SCALE, WinSize, components::{Enemy, SpriteSize, Movable, FromEnemy, Laser, Velocity}, ENEMY_SIZE, EnemyCount, MAX_ENEMY_COUNT, ENEMY_LASER_SIZE, BASE_SPEED, TIME_STEP};
 
 pub struct EnemyPlugin;
 
@@ -17,7 +17,8 @@ impl Plugin for EnemyPlugin {
             SystemSet::new()
                 .with_run_criteria(enemy_fire_criteria)
                 .with_system(enemy_fire_system),
-        );
+        )
+        .add_system(enemy_movement_system);
     }
 }
 
@@ -83,3 +84,60 @@ fn enemy_fire_system(
         .insert(Velocity { x: 0.0, y: -1.0 });
     }
 }
+
+fn enemy_movement_system(
+    time: Res<Time>, 
+    mut query: Query<&mut Transform, With<Enemy>>
+) {
+    let now = time.seconds_since_startup() as f32;
+
+    for mut enemy_tf in query.iter_mut() {
+        // current position
+        let (x_org, y_org) = (enemy_tf.translation.x, enemy_tf.translation.y);
+
+        // max distance from origin
+        let max_distance = TIME_STEP * BASE_SPEED;
+
+        // fixtures (hardcode for now)
+        let dir: f32 = -1.; // 1 for counter clockwise, -1 clockwise
+        let (x_pivot, y_pivot) = (0.0, 0.0);
+        let (x_radius, y_radius) = (200., 130.);
+
+        // compute next angle (based on time for now)
+        let angle = dir * BASE_SPEED * TIME_STEP * now % 360. / PI;
+
+        // compute target x/y
+        let x_dst = x_radius * angle.cos() + x_pivot;
+        let y_dst = y_radius * angle.sin() + y_pivot;
+
+        // compute distance
+        let dx =  x_org - x_dst;
+        let dy =  y_org - y_dst;
+        let distance = (dx * dx + dy * dy).sqrt();
+        let distance_ratio = if distance != 0. {
+            max_distance / distance
+        } else {
+            0.
+        };
+
+        // compute final x/y
+        let x = x_org - dx * distance_ratio;
+        let x = if dx > 0. {
+            x.max(x_dst)
+        } else {
+            x.min(x_dst)
+        };
+
+        let y = y_org - dy * distance_ratio;
+        let y = if dy > 0. {
+            y.max(y_dst)
+        } else {
+            y.min(y_dst)
+        };
+
+        let translation = &mut enemy_tf.translation;
+        (translation.x, translation.y) = (x, y);
+
+    }
+}
+
