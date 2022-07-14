@@ -35,6 +35,7 @@ const BASE_SPEED: f32 = 500.;
 
 const PLAYER_RESPAWN_DELAY: f64 = 2.;
 const MAX_ENEMY_COUNT: u32 = 10;
+const FORMATION_MEMBERS_MAX: u32 = 2;
 
 // endregion: --- Game Contants
 
