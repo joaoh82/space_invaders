@@ -1,4 +1,4 @@
-use crate::{GameTextures, WinSize, PLAYER_SIZE, SPRITE_SCALE, PLAYER_LASER_SIZE, components::{Velocity, Player, Movable, FromPlayer, SpriteSize, Laser}, TIME_STEP, BASE_SPEED, PlayerState, PLAYER_RESPAWN_DELAY};
+use crate::{GameTextures, WinSize, PLAYER_SIZE, SPRITE_SCALE, PLAYER_LASER_SIZE, components::{Velocity, Player, Movable, FromPlayer, SpriteSize, Laser, Attributes}, TIME_STEP, BASE_SPEED, PlayerState, PLAYER_RESPAWN_DELAY};
 use bevy::{prelude::*, input::keyboard, core::FixedTimestep};
 
 pub struct PlayerPlugin;
@@ -46,7 +46,8 @@ fn player_spawn_system(
 			.insert(Player)
 			.insert(SpriteSize::from(PLAYER_SIZE))
 			.insert(Movable { auto_despawn: false })
-			.insert(Velocity { x: 0., y: 0. });
+			.insert(Velocity { x: 0., y: 0. })
+            .insert(Attributes::default());
 
 		player_state.spawned();
 	}

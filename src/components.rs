@@ -12,8 +12,16 @@ pub struct Velocity {
 
 /// Attribute component is used to store the attributes of an entity (Player or Enemy).
 #[derive(Component)]
-pub struct Attribute {
+pub struct Attributes {
     pub health: f32,
+}
+
+impl Default for Attributes {
+    fn default() -> Self {
+        Attributes {
+            health: 100.0,
+        }
+    }
 }
 
 #[derive(Component)]
@@ -47,6 +55,14 @@ pub struct FromPlayer;
 
 // region: --- Enemy Components
 
+#[derive(Component)]
+pub struct Enemy;
+
+#[derive(Component)]
+pub struct FromEnemy;
+
+// endregion: --- Enemy Components
+
 // region: --- Explosion Components
 
 #[derive(Component)]
@@ -65,11 +81,3 @@ impl Default for ExplosionTimer {
 }
 
 // endregion: --- Explosion Components
-
-#[derive(Component)]
-pub struct Enemy;
-
-#[derive(Component)]
-pub struct FromEnemy;
-
-// endregion: --- Enemy Components

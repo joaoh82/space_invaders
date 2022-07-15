@@ -25,6 +25,7 @@ Features that are in the roadmap of the project:
 
 *Ideally in order of priority, but nothing set in stone.*
 
+- [ ] Add damage setting to laser
 - [ ] Add UI elements to screen
   - [ ] Health bar
   - [ ] Ammo bar 

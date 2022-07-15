@@ -4,7 +4,7 @@ mod components;
 mod enemy;
 
 use bevy::{prelude::*, math::Vec3Swizzles, sprite::collide_aabb::collide, ecs::system::Insert, utils::HashSet};
-use components::{Velocity, Player, Movable, SpriteSize, Laser, FromPlayer, Enemy, ExplosionToSpawn, Explosion, ExplosionTimer, FromEnemy};
+use components::{Velocity, Player, Movable, SpriteSize, Laser, FromPlayer, Enemy, ExplosionToSpawn, Explosion, ExplosionTimer, FromEnemy, Attributes};
 use enemy::EnemyPlugin;
 use player::*;
 
@@ -229,9 +229,9 @@ fn enemy_laser_hit_player_system(
     mut player_state: ResMut<PlayerState>,
     time: Res<Time>,
     laser_query: Query<(Entity, &Transform, &SpriteSize), (With<Laser>, With<FromEnemy>)>,
-    player_query: Query<(Entity, &Transform, &SpriteSize), With<Player>>,
+    mut player_query: Query<(Entity, &Transform, &SpriteSize, &mut Attributes), With<Player>>,
 ){
-    if let Ok((player_entity, player_tf, player_size)) = player_query.get_single() {
+    if let Ok((player_entity, player_tf, player_size, mut player_attributes)) = player_query.get_single_mut() {
         let player_scale = Vec2::from(player_tf.scale.xy());
 
         for (laser_entidy, laser_tf, laser_size) in laser_query.iter() {
@@ -247,16 +247,24 @@ fn enemy_laser_hit_player_system(
 
             // perform collision action
             if let Some(collision) = collision {
+                // take damage
+                player_attributes.health -= 10.;
+                println!("Player health: {}", player_attributes.health);
+
                 // remove laser
                 commands.entity(laser_entidy).despawn();
 
-                // remove player
-                commands.entity(player_entity).despawn();
-                player_state.shot(time.seconds_since_startup());
+                // If players health is 0, spawn explosion and despawn player
+                if player_attributes.health <= 0. {
+                    // remove player
+                    commands.entity(player_entity).despawn();
+                    player_state.shot(time.seconds_since_startup());
 
-                // spawn explosion
-                commands.spawn().insert(ExplosionToSpawn(player_tf.translation.clone()));
+                    // spawn explosion
+                    commands.spawn().insert(ExplosionToSpawn(player_tf.translation.clone()));
+                }
 
+                // Always break if there is a collision
                 break;
             }
         }
