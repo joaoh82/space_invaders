@@ -20,7 +20,8 @@ Before you begin, ensure you have met the following requirements:
 - [x] Enemy firing system
 - [x] Player explosion and respawing after some time
 - [x] Enemy movement in spiral formation
-- [ ] Implement attribute system with health player
+- [x] Implement attribute system with health player
+- [ ] Implement Pause on pressing P
 
 ### Roadmap
 Features that are in the roadmap of the project:
@@ -28,7 +29,6 @@ Features that are in the roadmap of the project:
 *Ideally in order of priority, but nothing set in stone.*
 
 - [ ] Implement score system
-- [ ] Implement Pause on pressing P
 - [ ] Add damage setting to laser
 - [ ] Add UI elements to screen
   - [ ] Health bar
