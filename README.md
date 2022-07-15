@@ -18,13 +18,13 @@ Before you begin, ensure you have met the following requirements:
 - [x] Enemy firing system
 - [x] Player explosion and respawing after some time
 - [x] Enemy movement in spiral formation
+- [ ] Implement attribute system with health, ammo and score for player
 
 ### Roadmap
 Features that are in the roadmap of the project:
 
 *Ideally in order of priority, but nothing set in stone.*
 
-- [ ] Implement attribute system with health, ammo and score for player
 - [ ] Add UI elements to screen
   - [ ] Health bar
   - [ ] Ammo bar 

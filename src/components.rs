@@ -10,6 +10,12 @@ pub struct Velocity {
     pub y: f32,
 }
 
+/// Attribute component is used to store the attributes of an entity (Player or Enemy).
+#[derive(Component)]
+pub struct Attribute {
+    pub health: f32,
+}
+
 #[derive(Component)]
 pub struct Movable {
     pub auto_despawn: bool,
