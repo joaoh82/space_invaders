@@ -2,6 +2,8 @@ Space Invaders with Bevy
 ===
 The goal of this project is to create a Space Invaders type project with Bevy. It is an ongoing project and its main purpose is to learn more about the Bevy Engine and it's feature, while havin fun with it of course.
 
+![Gameplay Screenshot](assets/screenshots/Screenshot_02.png)
+
 ### Requirements
 Before you begin, ensure you have met the following requirements:
 * Rust (latest stable) – [How to install Rust](https://www.rust-lang.org/en-US/install.html)
@@ -18,13 +20,15 @@ Before you begin, ensure you have met the following requirements:
 - [x] Enemy firing system
 - [x] Player explosion and respawing after some time
 - [x] Enemy movement in spiral formation
-- [ ] Implement attribute system with health, ammo and score for player
+- [ ] Implement attribute system with health player
 
 ### Roadmap
 Features that are in the roadmap of the project:
 
 *Ideally in order of priority, but nothing set in stone.*
 
+- [ ] Implement score system
+- [ ] Implement Pause on pressing P
 - [ ] Add damage setting to laser
 - [ ] Add UI elements to screen
   - [ ] Health bar

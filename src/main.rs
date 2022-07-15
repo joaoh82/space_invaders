@@ -4,13 +4,13 @@ mod components;
 mod enemy;
 
 use bevy::{prelude::*, math::Vec3Swizzles, sprite::collide_aabb::collide, ecs::system::Insert, utils::HashSet};
-use components::{Velocity, Player, Movable, SpriteSize, Laser, FromPlayer, Enemy, ExplosionToSpawn, Explosion, ExplosionTimer, FromEnemy, Attributes};
+use components::{Velocity, Player, Movable, SpriteSize, Laser, FromPlayer, Enemy, ExplosionToSpawn, Explosion, ExplosionTimer, FromEnemy, Attributes, HealthText};
 use enemy::EnemyPlugin;
 use player::*;
 
 // region: --- Asset Constants
 
-const PLAYER_SPRITE: &str = "player_a_01.png";
+const PLAYER_SPRITE: &str = "player_b_01.png";
 const PLAYER_SIZE: (f32, f32) = (144., 75.);
 const PLAYER_LASER_SPRITE: &str = "laser_a_01.png";
 const PLAYER_LASER_SIZE: (f32, f32) = (9., 54.);
@@ -92,7 +92,7 @@ fn main() {
     App::new()
         .insert_resource(ClearColor(Color::rgb(0.04, 0.04, 0.04)))
         .insert_resource(WindowDescriptor {
-            title: "Rust Invaders".to_string(),
+            title: "Space Invaders".to_string(),
             width: 598.0,
             height: 676.0,
             ..Default::default()
@@ -117,6 +117,7 @@ fn setup_system(
 ) {
     // camera
     commands.spawn_bundle(OrthographicCameraBundle::new_2d());
+    commands.spawn_bundle(UiCameraBundle::default()); // this is needed to see the ui
 
     // capture window size
     let window = windows.get_primary_mut().unwrap();
@@ -148,7 +149,6 @@ fn setup_system(
     };
     commands.insert_resource(game_textures);
     commands.insert_resource(EnemyCount(0));
-
 }
 
 fn movable_system(
@@ -249,7 +249,8 @@ fn enemy_laser_hit_player_system(
             if let Some(collision) = collision {
                 // take damage
                 player_attributes.health -= 10.;
-                println!("Player health: {}", player_attributes.health);
+
+                //println!("Player health: {}", player_attributes.health);
 
                 // remove laser
                 commands.entity(laser_entidy).despawn();

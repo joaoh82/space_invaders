@@ -1,4 +1,4 @@
-use crate::{GameTextures, WinSize, PLAYER_SIZE, SPRITE_SCALE, PLAYER_LASER_SIZE, components::{Velocity, Player, Movable, FromPlayer, SpriteSize, Laser, Attributes}, TIME_STEP, BASE_SPEED, PlayerState, PLAYER_RESPAWN_DELAY};
+use crate::{GameTextures, WinSize, PLAYER_SIZE, SPRITE_SCALE, PLAYER_LASER_SIZE, components::{Velocity, Player, Movable, FromPlayer, SpriteSize, Laser, Attributes, HealthText}, TIME_STEP, BASE_SPEED, PlayerState, PLAYER_RESPAWN_DELAY};
 use bevy::{prelude::*, input::keyboard, core::FixedTimestep};
 
 pub struct PlayerPlugin;
@@ -6,22 +6,41 @@ pub struct PlayerPlugin;
 impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(PlayerState::default())
+            .insert_resource(Attributes::default()) // This is neede to access the attributes from the player
 			.add_system_set(
 				SystemSet::new()
 					.with_run_criteria(FixedTimestep::step(0.5))
 					.with_system(player_spawn_system),
 			)
 			.add_system(player_keyboard_event_system)
-			.add_system(player_fire_system);
+			.add_system(player_fire_system)
+            .add_system(health_text_update_system);
 	}
+}
+
+/// This system is responsible for updating the value of the player's health.
+fn health_text_update_system(
+    player_query: Query<(Entity, &Attributes), With<Player>>, 
+    mut query: Query<&mut Text, With<HealthText>>
+) {
+    if let Ok((player_entity, player_attributes)) = player_query.get_single() {
+        for mut text in query.iter_mut() {
+            let new_health = format!("Health: {}", player_attributes.health);
+            // We used the `Text::with_section` helper method, but it is still just a `Text`,
+            // so to update it, we are still updating the one and only section
+            text.sections[0].value = new_health;
+        }
+    }
 }
 
 fn player_spawn_system(
     mut commands: Commands,
     mut player_state: ResMut<PlayerState>,
+    player_attributes: Res<Attributes>, // This is needed to access the attributes from the player
     time: Res<Time>,
     game_textures: Res<GameTextures>,
     mut win_size: ResMut<WinSize>,
+    asset_server: Res<AssetServer>, // Need this to spawn the player's health text
 ) {
     let now = time.seconds_since_startup();
 	let last_shot = player_state.last_shot;
@@ -48,6 +67,35 @@ fn player_spawn_system(
 			.insert(Movable { auto_despawn: false })
 			.insert(Velocity { x: 0., y: 0. })
             .insert(Attributes::default());
+
+        // add health text to top left of screen
+        commands
+            .spawn_bundle(TextBundle {
+                style: Style {
+                    align_self: AlignSelf::FlexEnd,
+                    position_type: PositionType::Absolute,
+                    position: Rect {
+                        top: Val::Px(15.0),
+                        left: Val::Px(15.0),
+                        ..default()
+                    },
+                    ..default()
+                },
+                // Use the `Text::with_section` constructor
+                text: Text::with_section(
+                    // Accepts a `String` or any type that converts into a `String`, such as `&str`
+                    format!("Health: {}", player_attributes.health.to_string()),
+                    
+                    TextStyle {
+                        font: asset_server.load("fonts/AgentOrange.ttf"),
+                        font_size: 16.0,
+                        color: Color::GREEN,
+                    },
+                    Default::default()
+                ),
+                ..default()
+            })
+            .insert(HealthText);
 
 		player_state.spawned();
 	}
