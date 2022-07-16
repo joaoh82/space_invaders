@@ -23,11 +23,11 @@ impl Plugin for EnemyPlugin {
 					.with_system(enemy_spawn_system),
 			)
             .add_system_set(
-                SystemSet::on_update(AppState::InGame)
+                SystemSet::on_update(AppState::InGame) // Only run this system when in the InGame state
                 .with_system(enemy_movement_system),
             )
 			.add_system_set(
-				SystemSet::on_update(AppState::InGame)
+				SystemSet::on_update(AppState::InGame) // Only run this system when in the InGame state
 					.with_run_criteria(enemy_fire_criteria)
 					.with_system(enemy_fire_system),
 			);

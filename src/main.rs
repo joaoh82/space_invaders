@@ -110,7 +110,7 @@ fn main() {
         .add_plugin(EnemyPlugin)
         .add_state(AppState::InGame)
         .add_system_set(
-            SystemSet::on_update(AppState::InGame)                        
+            SystemSet::on_update(AppState::InGame) // Only run this system when in the InGame state                  
                 .with_system(movable_system)
                 .with_system(player_laser_hit_enemy_system)
                 .with_system(enemy_laser_hit_player_system)
@@ -328,21 +328,17 @@ fn main_keyboard_input_system(
     mut app_state: ResMut<State<AppState>>,
     keyboard: Res<Input<KeyCode>>,
 ) {
+    // keyboard.just_pressed limits the press to only one time instead of a series of presses
     if keyboard.just_pressed(KeyCode::P) {
         match app_state.current() {
             AppState::MainMenu => {
-                app_state.set(AppState::Paused).unwrap();
-                
-                println!("paused");
+                println!("Does nothing");
             }
             AppState::InGame => {
-                // TODO: play game music
                 app_state.set(AppState::Paused).unwrap();
-                
                 println!("paused");
             }
             AppState::Paused => {
-                // TODO: play pause screen music
                 app_state.set(AppState::InGame).unwrap();
                 println!("unpaused");
             }

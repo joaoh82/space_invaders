@@ -13,7 +13,7 @@ impl Plugin for PlayerPlugin {
 					.with_system(player_spawn_system),
 			)
             .add_system_set(
-                SystemSet::on_update(AppState::InGame)
+                SystemSet::on_update(AppState::InGame) // Only run this system when in the InGame state
                 .with_system(player_keyboard_event_system)
                 .with_system(player_fire_system)
                 .with_system(health_text_update_system)
