@@ -3,7 +3,7 @@ mod player;
 mod components;
 mod enemy;
 
-use bevy::{prelude::*, math::Vec3Swizzles, sprite::collide_aabb::collide, ecs::system::Insert, utils::HashSet};
+use bevy::{prelude::*, math::Vec3Swizzles, sprite::collide_aabb::collide, ecs::{system::Insert, schedule::ShouldRun}, utils::HashSet, core::FixedTimestep};
 use components::{Velocity, Player, Movable, SpriteSize, Laser, FromPlayer, Enemy, ExplosionToSpawn, Explosion, ExplosionTimer, FromEnemy, Attributes, HealthText};
 use enemy::EnemyPlugin;
 use player::*;
@@ -56,6 +56,13 @@ struct GameTextures {
 
 struct EnemyCount(u32);
 
+#[derive(Debug, Clone, Eq, PartialEq, Hash)]
+enum AppState {
+    MainMenu,
+    InGame,
+    Paused,
+}
+
 struct PlayerState {
     on: bool, // is the player alive?
     last_shot: f64, // -1 if not shot
@@ -98,14 +105,19 @@ fn main() {
             ..Default::default()
         })
         .add_plugins(DefaultPlugins)
+        .add_startup_system(setup_system) // Called once at the beginning of the game
         .add_plugin(PlayerPlugin)
         .add_plugin(EnemyPlugin)
-        .add_startup_system(setup_system) // Called once at the beginning of the game
-        .add_system(movable_system)
-        .add_system(player_laser_hit_enemy_system)
-        .add_system(enemy_laser_hit_player_system)
-        .add_system(explosion_to_spawn_system)
-        .add_system(explostion_animation_system)
+        .add_state(AppState::InGame)
+        .add_system_set(
+            SystemSet::on_update(AppState::InGame)                        
+                .with_system(movable_system)
+                .with_system(player_laser_hit_enemy_system)
+                .with_system(enemy_laser_hit_player_system)
+                .with_system(explosion_to_spawn_system)
+                .with_system(explostion_animation_system)
+        )
+        .add_system(main_keyboard_input_system)
         .run();
 }
 
@@ -306,6 +318,33 @@ fn explostion_animation_system(
             sprite.index += 1;
             if sprite.index >= EXPLOSION_LENGTH {
                 commands.entity(entity).despawn();
+            }
+        }
+    }
+}
+
+fn main_keyboard_input_system(
+    mut commands: Commands,
+    mut app_state: ResMut<State<AppState>>,
+    keyboard: Res<Input<KeyCode>>,
+) {
+    if keyboard.just_pressed(KeyCode::P) {
+        match app_state.current() {
+            AppState::MainMenu => {
+                app_state.set(AppState::Paused).unwrap();
+                
+                println!("paused");
+            }
+            AppState::InGame => {
+                // TODO: play game music
+                app_state.set(AppState::Paused).unwrap();
+                
+                println!("paused");
+            }
+            AppState::Paused => {
+                // TODO: play pause screen music
+                app_state.set(AppState::InGame).unwrap();
+                println!("unpaused");
             }
         }
     }

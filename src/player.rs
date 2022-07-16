@@ -1,4 +1,4 @@
-use crate::{GameTextures, WinSize, PLAYER_SIZE, SPRITE_SCALE, PLAYER_LASER_SIZE, components::{Velocity, Player, Movable, FromPlayer, SpriteSize, Laser, Attributes, HealthText}, TIME_STEP, BASE_SPEED, PlayerState, PLAYER_RESPAWN_DELAY};
+use crate::{GameTextures, WinSize, PLAYER_SIZE, SPRITE_SCALE, PLAYER_LASER_SIZE, components::{Velocity, Player, Movable, FromPlayer, SpriteSize, Laser, Attributes, HealthText}, TIME_STEP, BASE_SPEED, PlayerState, PLAYER_RESPAWN_DELAY, AppState};
 use bevy::{prelude::*, input::keyboard, core::FixedTimestep};
 
 pub struct PlayerPlugin;
@@ -12,9 +12,12 @@ impl Plugin for PlayerPlugin {
 					.with_run_criteria(FixedTimestep::step(0.5))
 					.with_system(player_spawn_system),
 			)
-			.add_system(player_keyboard_event_system)
-			.add_system(player_fire_system)
-            .add_system(health_text_update_system);
+            .add_system_set(
+                SystemSet::on_update(AppState::InGame)
+                .with_system(player_keyboard_event_system)
+                .with_system(player_fire_system)
+                .with_system(health_text_update_system)
+            );
 	}
 }
 

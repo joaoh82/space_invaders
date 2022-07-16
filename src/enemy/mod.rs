@@ -2,7 +2,7 @@ use self::formation::{Formation, FormationMaker};
 use crate::components::{Enemy, FromEnemy, Laser, Movable, SpriteSize, Velocity};
 use crate::{
 	EnemyCount, GameTextures, WinSize, ENEMY_LASER_SIZE, MAX_ENEMY_COUNT, ENEMY_SIZE, SPRITE_SCALE,
-	TIME_STEP,
+	TIME_STEP, AppState,
 };
 use bevy::core::FixedTimestep;
 use bevy::ecs::schedule::ShouldRun;
@@ -22,12 +22,15 @@ impl Plugin for EnemyPlugin {
 					.with_run_criteria(FixedTimestep::step(1.))
 					.with_system(enemy_spawn_system),
 			)
+            .add_system_set(
+                SystemSet::on_update(AppState::InGame)
+                .with_system(enemy_movement_system),
+            )
 			.add_system_set(
-				SystemSet::new()
+				SystemSet::on_update(AppState::InGame)
 					.with_run_criteria(enemy_fire_criteria)
 					.with_system(enemy_fire_system),
-			)
-			.add_system(enemy_movement_system);
+			);
 	}
 }
 
