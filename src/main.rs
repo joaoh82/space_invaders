@@ -77,6 +77,18 @@ impl Default for PlayerState {
     }
 }
 
+pub struct GameState {
+    pub score: u32,
+}
+
+impl Default for GameState {
+    fn default() -> Self {
+        GameState {
+            score: 0,
+        }
+    }
+}
+
 impl PlayerState {
     pub fn is_alive(&self) -> bool {
         self.on
@@ -192,6 +204,7 @@ fn player_laser_hit_enemy_system(
     mut enemy_count: ResMut<EnemyCount>,
     laser_query: Query<(Entity, &Transform, &SpriteSize), (With<Laser>, With<FromPlayer>)>,
     enemy_query: Query<(Entity, &Transform, &SpriteSize), With<Enemy>>,
+    mut game_state: ResMut<GameState>,
 ) {
     let mut despawned_entities: HashSet<Entity> = HashSet::new();
 
@@ -231,6 +244,9 @@ fn player_laser_hit_enemy_system(
 
                 // spawn explosion
                 commands.spawn().insert(ExplosionToSpawn(enemy_tf.translation.clone()));
+                // Updating game state - score
+                game_state.score += 5;
+
             }
         }
     }

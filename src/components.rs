@@ -48,6 +48,9 @@ impl From<(f32, f32)> for SpriteSize {
 #[derive(Component)]
 pub struct HealthText;
 
+#[derive(Component)]
+pub struct ScoreText;
+
 // endregion: --- UI Components
 
 // region: --- Player Components

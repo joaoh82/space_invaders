@@ -1,4 +1,4 @@
-use crate::{GameTextures, WinSize, PLAYER_SIZE, SPRITE_SCALE, PLAYER_LASER_SIZE, components::{Velocity, Player, Movable, FromPlayer, SpriteSize, Laser, Attributes, HealthText}, TIME_STEP, BASE_SPEED, PlayerState, PLAYER_RESPAWN_DELAY, AppState};
+use crate::{GameTextures, WinSize, PLAYER_SIZE, SPRITE_SCALE, PLAYER_LASER_SIZE, components::{Velocity, Player, Movable, FromPlayer, SpriteSize, Laser, Attributes, HealthText, ScoreText}, TIME_STEP, BASE_SPEED, PlayerState, GameState, PLAYER_RESPAWN_DELAY, AppState};
 use bevy::{prelude::*, input::keyboard, core::FixedTimestep};
 
 pub struct PlayerPlugin;
@@ -7,6 +7,7 @@ impl Plugin for PlayerPlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(PlayerState::default())
             .insert_resource(Attributes::default()) // This is neede to access the attributes from the player
+            .insert_resource(GameState::default()) // This is needed to access the game state from the player
 			.add_system_set(
 				SystemSet::new()
 					.with_run_criteria(FixedTimestep::step(0.5))
@@ -17,6 +18,7 @@ impl Plugin for PlayerPlugin {
                 .with_system(player_keyboard_event_system)
                 .with_system(player_fire_system)
                 .with_system(health_text_update_system)
+                .with_system(score_text_update_system),
             );
 	}
 }
@@ -36,9 +38,23 @@ fn health_text_update_system(
     }
 }
 
+/// This system is responsible for updating the value of the player's score.
+fn score_text_update_system(
+    mut game_state: ResMut<GameState>,
+    mut query: Query<&mut Text, With<ScoreText>>
+) {
+    for mut text in query.iter_mut() {
+        let new_score = format!("Score: {}", game_state.score);
+        // We used the `Text::with_section` helper method, but it is still just a `Text`,
+        // so to update it, we are still updating the one and only section
+        text.sections[0].value = new_score;
+    }
+}
+
 fn player_spawn_system(
     mut commands: Commands,
     mut player_state: ResMut<PlayerState>,
+    mut game_state: ResMut<GameState>,
     player_attributes: Res<Attributes>, // This is needed to access the attributes from the player
     time: Res<Time>,
     game_textures: Res<GameTextures>,
@@ -99,6 +115,33 @@ fn player_spawn_system(
                 ..default()
             })
             .insert(HealthText);
+        commands
+            .spawn_bundle(TextBundle {
+                style: Style {
+                    align_self: AlignSelf::FlexEnd,
+                    position_type: PositionType::Absolute,
+                    position: Rect {
+                        top: Val::Px(15.0),
+                        right: Val::Px(15.0),
+                        ..default()
+                    },
+                    ..default()
+                },
+                // Use the `Text::with_section` constructor
+                text: Text::with_section(
+                    // Accepts a `String` or any type that converts into a `String`, such as `&str`
+                    format!("Score: {}", game_state.score.to_string()),
+                    
+                    TextStyle {
+                        font: asset_server.load("fonts/AgentOrange.ttf"),
+                        font_size: 16.0,
+                        color: Color::BLUE,
+                    },
+                    Default::default()
+                ),
+                ..default()
+            })
+            .insert(ScoreText);
 
 		player_state.spawned();
 	}
