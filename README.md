@@ -23,14 +23,14 @@ Before you begin, ensure you have met the following requirements:
 - [x] Implement attribute system with health player
 - [x] Implement Pause on pressing P
 - [x] Implement score system
-- [ ] Play sound on fire and explosion
+- [x] Play sound on fire and explosion
+- [ ] Not let player get off screen when moving
 
 ### Roadmap
 Features that are in the roadmap of the project:
 
 *Ideally in order of priority, but nothing set in stone.*
 
-- [ ] Not let player get off screen when moving
 - [ ] Add damage setting to laser
 - [ ] Add score value to enemy (different enemies can have different scores)
 - [ ] Add UI elements to screen

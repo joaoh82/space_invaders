@@ -2,13 +2,15 @@ use self::formation::{Formation, FormationMaker};
 use crate::components::{Enemy, FromEnemy, Laser, Movable, SpriteSize, Velocity};
 use crate::{
 	EnemyCount, GameTextures, WinSize, ENEMY_LASER_SIZE, MAX_ENEMY_COUNT, ENEMY_SIZE, SPRITE_SCALE,
-	TIME_STEP, AppState,
+	TIME_STEP, AppState, GameSounds,
 };
 use bevy::core::FixedTimestep;
 use bevy::ecs::schedule::ShouldRun;
 use bevy::prelude::*;
 use rand::{thread_rng, Rng};
 use std::f32::consts::PI;
+
+use bevy_kira_audio::{Audio, AudioPlugin};
 
 mod formation;
 
@@ -75,7 +77,9 @@ fn enemy_fire_criteria() -> ShouldRun {
 fn enemy_fire_system(
 	mut commands: Commands,
 	game_textures: Res<GameTextures>,
+    game_sounds: Res<GameSounds>,
 	enemy_query: Query<&Transform, With<Enemy>>,
+    audio: Res<Audio>,
 ) {
 	for &tf in enemy_query.iter() {
 		let (x, y) = (tf.translation.x, tf.translation.y);
@@ -96,6 +100,9 @@ fn enemy_fire_system(
 			.insert(FromEnemy)
 			.insert(Movable { auto_despawn: true })
 			.insert(Velocity { x: 0., y: -1. });
+
+        // Playing the laser sound
+        audio.play(game_sounds.enemy_laser.clone());
 	}
 }
 

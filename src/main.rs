@@ -4,6 +4,7 @@ mod components;
 mod enemy;
 
 use bevy::{prelude::*, math::Vec3Swizzles, sprite::collide_aabb::collide, ecs::{system::Insert, schedule::ShouldRun}, utils::HashSet, core::FixedTimestep};
+use bevy_kira_audio::{Audio, AudioPlugin, AudioSource};
 use components::{Velocity, Player, Movable, SpriteSize, Laser, FromPlayer, Enemy, ExplosionToSpawn, Explosion, ExplosionTimer, FromEnemy, Attributes, HealthText};
 use enemy::EnemyPlugin;
 use player::*;
@@ -14,13 +15,18 @@ const PLAYER_SPRITE: &str = "player_b_01.png";
 const PLAYER_SIZE: (f32, f32) = (144., 75.);
 const PLAYER_LASER_SPRITE: &str = "laser_a_01.png";
 const PLAYER_LASER_SIZE: (f32, f32) = (9., 54.);
+const PLAYER_LASER_SOUND: &str = "sounds/player_laser.wav";
 
 const ENEMY_SPRITE: &str = "enemy_a_01.png";
 const ENEMY_SIZE: (f32, f32) = (144., 75.);
 const ENEMY_LASER_SPRITE: &str = "laser_b_01.png";
 const ENEMY_LASER_SIZE: (f32, f32) = (17., 55.);
+const ENEMY_LASER_SOUND: &str = "sounds/enemy_laser.wav";
 
 const EXPLOSION_SHEET: &str = "explo_a_sheet.png";
+const ENEMY_EXPLOSION_SOUND: &str = "sounds/explosion.wav";
+const PLAYER_EXPLOSION_SOUND: &str = "sounds/player_explosion.wav";
+const PLAYER_HIT_SOUND: &str = "sounds/player_hit.ogg";
 
 const SPRITE_SCALE: f32 = 0.5;
 
@@ -52,6 +58,14 @@ struct GameTextures {
     enemy: Handle<Image>,
     enemy_laser: Handle<Image>,
     explosion: Handle<TextureAtlas>,
+}
+
+struct GameSounds {
+    player_laser: Handle<AudioSource>,
+    enemy_laser: Handle<AudioSource>,
+    enemy_explosion: Handle<AudioSource>,
+    player_explosion: Handle<AudioSource>,
+    player_hit: Handle<AudioSource>,
 }
 
 struct EnemyCount(u32);
@@ -120,6 +134,7 @@ fn main() {
         .add_startup_system(setup_system) // Called once at the beginning of the game
         .add_plugin(PlayerPlugin)
         .add_plugin(EnemyPlugin)
+        .add_plugin(AudioPlugin)
         .add_state(AppState::InGame)
         .add_system_set(
             SystemSet::on_update(AppState::InGame) // Only run this system when in the InGame state                  
@@ -171,7 +186,18 @@ fn setup_system(
         enemy_laser: asset_server.load(ENEMY_LASER_SPRITE),
         explosion: explosion,
     };
+
+    // add GameSounds resource
+    let game_sounds = GameSounds {
+        player_laser: asset_server.load(PLAYER_LASER_SOUND),
+        enemy_laser: asset_server.load(ENEMY_LASER_SOUND),
+        enemy_explosion: asset_server.load(ENEMY_EXPLOSION_SOUND),
+        player_explosion: asset_server.load(PLAYER_EXPLOSION_SOUND),
+        player_hit: asset_server.load(PLAYER_HIT_SOUND),
+    };
+
     commands.insert_resource(game_textures);
+    commands.insert_resource(game_sounds);
     commands.insert_resource(EnemyCount(0));
 }
 
@@ -205,6 +231,8 @@ fn player_laser_hit_enemy_system(
     laser_query: Query<(Entity, &Transform, &SpriteSize), (With<Laser>, With<FromPlayer>)>,
     enemy_query: Query<(Entity, &Transform, &SpriteSize), With<Enemy>>,
     mut game_state: ResMut<GameState>,
+    game_sounds: Res<GameSounds>,
+    audio: Res<Audio>,
 ) {
     let mut despawned_entities: HashSet<Entity> = HashSet::new();
 
@@ -244,6 +272,8 @@ fn player_laser_hit_enemy_system(
 
                 // spawn explosion
                 commands.spawn().insert(ExplosionToSpawn(enemy_tf.translation.clone()));
+                // Playing the explosion sound
+                audio.play(game_sounds.enemy_explosion.clone());
                 // Updating game state - score
                 game_state.score += 5;
 
@@ -258,6 +288,8 @@ fn enemy_laser_hit_player_system(
     time: Res<Time>,
     laser_query: Query<(Entity, &Transform, &SpriteSize), (With<Laser>, With<FromEnemy>)>,
     mut player_query: Query<(Entity, &Transform, &SpriteSize, &mut Attributes), With<Player>>,
+    game_sounds: Res<GameSounds>,
+    audio: Res<Audio>,
 ){
     if let Ok((player_entity, player_tf, player_size, mut player_attributes)) = player_query.get_single_mut() {
         let player_scale = Vec2::from(player_tf.scale.xy());
@@ -291,6 +323,12 @@ fn enemy_laser_hit_player_system(
 
                     // spawn explosion
                     commands.spawn().insert(ExplosionToSpawn(player_tf.translation.clone()));
+
+                    // Playing the explosion sound
+                    audio.play(game_sounds.player_explosion.clone());
+                }else{
+                    // Playing the hit sound
+                    audio.play(game_sounds.player_hit.clone());
                 }
 
                 // Always break if there is a collision

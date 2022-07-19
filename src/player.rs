@@ -1,5 +1,6 @@
-use crate::{GameTextures, WinSize, PLAYER_SIZE, SPRITE_SCALE, PLAYER_LASER_SIZE, components::{Velocity, Player, Movable, FromPlayer, SpriteSize, Laser, Attributes, HealthText, ScoreText}, TIME_STEP, BASE_SPEED, PlayerState, GameState, PLAYER_RESPAWN_DELAY, AppState};
+use crate::{GameTextures, WinSize, PLAYER_SIZE, SPRITE_SCALE, PLAYER_LASER_SIZE, components::{Velocity, Player, Movable, FromPlayer, SpriteSize, Laser, Attributes, HealthText, ScoreText}, TIME_STEP, BASE_SPEED, PlayerState, GameState, PLAYER_RESPAWN_DELAY, AppState, GameSounds};
 use bevy::{prelude::*, input::keyboard, core::FixedTimestep};
+use bevy_kira_audio::{Audio, AudioPlugin};
 
 pub struct PlayerPlugin;
 
@@ -18,7 +19,7 @@ impl Plugin for PlayerPlugin {
                 .with_system(player_keyboard_event_system)
                 .with_system(player_fire_system)
                 .with_system(health_text_update_system)
-                .with_system(score_text_update_system),
+                .with_system(score_text_update_system)
             );
 	}
 }
@@ -59,7 +60,7 @@ fn player_spawn_system(
     time: Res<Time>,
     game_textures: Res<GameTextures>,
     mut win_size: ResMut<WinSize>,
-    asset_server: Res<AssetServer>, // Need this to spawn the player's health text
+    asset_server: Res<AssetServer>,
 ) {
     let now = time.seconds_since_startup();
 	let last_shot = player_state.last_shot;
@@ -150,8 +151,10 @@ fn player_spawn_system(
 fn player_fire_system(
     mut commands: Commands,
     game_textures: Res<GameTextures>,
+    game_sounds: Res<GameSounds>,
     mut keyboard: Res<Input<KeyCode>>,
     query: Query<&Transform, With<Player>>,
+    audio: Res<Audio>,
 ) {
    if let Ok(player_tf) = query.get_single() {
     if keyboard.just_pressed(KeyCode::Space) {
@@ -179,6 +182,9 @@ fn player_fire_system(
         // Spawning the lasers - one on the left and one on the right
         spawn_laser(-x_offset);
         spawn_laser(x_offset);
+        
+        // Playing the laser sound
+        audio.play(game_sounds.player_laser.clone());
     }
    }
 }
