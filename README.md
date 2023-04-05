@@ -31,6 +31,7 @@ Features that are in the roadmap of the project:
 
 *Ideally in order of priority, but nothing set in stone.*
 
+- [ ] Make player move up and down also (but not off screen)
 - [ ] Add damage setting to laser
 - [ ] Add score value to enemy (different enemies can have different scores)
 - [ ] Add UI elements to screen
